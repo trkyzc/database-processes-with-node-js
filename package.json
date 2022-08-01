@@ -1,0 +1,16 @@
+{
+  "name": "oracle",
+  "version": "1.0.0",
+  "description": "",
+  "main": "app.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": [],
+  "dependencies": {
+    "csv": "^6.2.0",
+    "oracledb": "^5.4.0"
+  },
+  "author": "",
+  "license": "ISC"
+}
