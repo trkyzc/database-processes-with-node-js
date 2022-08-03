@@ -57,65 +57,72 @@ const oracledb = require('oracledb');
 
 const fs = require("fs");
 const { parse } = require("csv-parse"); //const csv  //destructiring
+const csv = require('fast-csv')
 var records= [];
 
-fs.createReadStream("./targets.simple.csv")
-
-
-  .pipe(parse({ delimiter: ",", from_line: 2 })) 
-  .on("data", function (row) {
-    records.push(row);
-  })
-  .on("end", async function () {
-    let connection = await oracledb.getConnection({   
-      user          : "EGITIM",
-      password      : "EGITIM_1478.",
-      connectString : "5.189.178.35:1521/datateamdb"
-  });
-
-    await records.forEach(element => {  //await eklendi.
-      multipleEntry(connection,element);
+fs.createReadStream('targets.simple.csv')
+    .pipe(csv.parse({headers:true}))
+    .on('error', error => console.error(error))
+    .on('data', function(row){
+      records.push(row);
+      
+    })
+    .on("end", async function () {
+      let connection = await oracledb.getConnection({   
+        user          : "EGITIM",
+        password      : "EGITIM_1478.",
+        connectString : "5.189.178.35:1521/datateamdb"
     });
-    console.log("The operation has been completed successfully");
-  })
-  .on("error", function (error) {
-    console.log(error.message);
-  });
-
   
-
+      await records.forEach(element => {  //await eklendi.
+      multipleEntry(connection,element);
+      });
+      console.log("The operation has been completed successfully");
+    })
+  
 
 
 async function multipleEntry(connection,element){
 
-    const sql = `INSERT INTO EGITIM.TARIK_MECR VALUES (:id, :schema,
-       :name, :aliases, :birth_date, :countries, :addresses, :identifiers, 
-       :sanctions, :phones, :emails, :dataset, :first_seen, :last_seen)`;
+    // let connection = await oracledb.getConnection({   
+    //     user          : "EGITIM",
+    //     password      : "EGITIM_1478.",
+    //     connectString : "5.189.178.35:1521/datateamdb"
+    // });
+
+    const sql = `INSERT INTO EGITIM.TARIK_MECR VALUES (:a, :b,
+       :c, :d, :e, :f, :g, :h, 
+       :i, :j, :k, :l, :m, :n)`;
     const binds = [
-    { id: element[0], schema: element[1], name: element[2], aliases: element[3], birth_date: element[4],
-      countries: element[5],addresses: element[6],identifiers: element[7],sanctions: element[8],phones: element[9],
-      emails: element[10],dataset: element[11],first_seen: element[12],last_seen: element[13] },
+    { a: element[0], b: element[1], c: element[2], d: element[3], e: element[4],
+      f: element[5],g: element[6],h: element[7],i: element[8],j: element[9],
+      k: element[10],l: element[11],m: element[12],n: element[13]},
     //{ a: '96', b: "Person", c:"Ömer", d:"omr", e:"19-12-1996",f:"tr",g:"qwerty",h:"zxcvb",i:"vbnm",j:"12345",k:"qwert@gmail.com",l:"qwert",m:"12-11-2000",n:"11-12-2001" },
     //{ a: '97', b: "Person", c:"Faruk", d:"far", e:"19-12-1996",f:"tr",g:"qwerty",h:"zxcvb",i:"vbnm",j:"12345",k:"qwert@gmail.com",l:"qwert",m:"12-11-2000",n:"11-12-2001" },
     ];
 
+    // for (let index = 0; index < element.length; index++) {
+    //   let a = element[index];
+    //   binds.push([a])
+    // }
+
     const options = {
     autoCommit: true,
     bindDefs: {
-      id: { type: oracledb.STRING, maxSize: 700 },
-      schema: { type: oracledb.STRING, maxSize: 700 },
-      name: { type: oracledb.STRING, maxSize: 700 },
-      aliases: { type: oracledb.STRING, maxSize: 700 },
-      birth_date: { type: oracledb.STRING, maxSize: 700 },
-      countries: { type: oracledb.STRING, maxSize: 700 },
-      addresses: { type: oracledb.STRING, maxSize: 700 },
-      identifiers: { type: oracledb.STRING, maxSize: 700 },
-      sanctions: { type: oracledb.STRING, maxSize: 700 },   
-      phones: { type: oracledb.STRING, maxSize: 700 },
-      emails: { type: oracledb.STRING, maxSize: 700 },
-      dataset: { type: oracledb.STRING, maxSize: 700 },
-      first_seen: { type: oracledb.STRING, maxSize: 700 },
-      last_seen: { type: oracledb.STRING, maxSize: 700 },
+      a: { type: oracledb.STRING, maxSize: 700 },
+      b: { type: oracledb.STRING, maxSize: 700 },
+      c: { type: oracledb.STRING, maxSize: 700 },
+      d: { type: oracledb.STRING, maxSize: 700 },
+      e: { type: oracledb.STRING, maxSize: 700 },
+      f: { type: oracledb.STRING, maxSize: 700 },
+      g: { type: oracledb.STRING, maxSize: 700 },
+      h: { type: oracledb.STRING, maxSize: 700 },
+      i: { type: oracledb.STRING, maxSize: 700 },   
+      j: { type: oracledb.STRING, maxSize: 700 },
+      k: { type: oracledb.STRING, maxSize: 700 },
+      l: { type: oracledb.STRING, maxSize: 700 },
+      m: { type: oracledb.STRING, maxSize: 700 },
+      n: { type: oracledb.STRING, maxSize: 700 },
     }
     };
 
