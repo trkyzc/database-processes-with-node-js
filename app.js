@@ -87,8 +87,9 @@ const { parse } = require("csv-parse"); //const csv  //destructiring
 
 
 var records= [];
+var headers= [];
 fs.createReadStream("./targets.simple.csv")
-  .pipe(parse({ delimiter: ",", from_line: 2, headers: true})) 
+  .pipe(parse({ delimiter: ",", from_line: 1, headers: true})) 
   .on("data", function (row) {
     records.push(row);
   })
@@ -99,6 +100,20 @@ fs.createReadStream("./targets.simple.csv")
       connectString : "5.189.178.35:1521/datateamdb"
   });
 
+  
+  records[0].forEach(element => {
+   
+      headers.push(element);
+  });
+
+  headers.forEach(element => {
+    console.log(element);
+  });
+
+  records.shift();
+    
+    
+
     await records.forEach(element => {  //await eklendi.
     multipleEntry(connection,element);
     });
@@ -107,6 +122,8 @@ fs.createReadStream("./targets.simple.csv")
   .on("error", function (error) {
     console.log(error.message);
   });
+
+
   
 
 
@@ -122,17 +139,14 @@ async function multipleEntry(connection,element){
        :c, :d, :e, :f, :g, :h, 
        :i, :j, :k, :l, :m, :n)`;
     const binds = [
-    { a: element[0], b: element[1], c: element[2], d: element[3], e: element[4],
+    { 
+      a: element[0], b: element[1], c: element[2], d: element[3], e: element[4],
       f: element[5],g: element[6],h: element[7],i: element[8],j: element[9],
-      k: element[10],l: element[11],m: element[12],n: element[13]},
+      k: element[10],l: element[11],m: element[12],n: element[13]
+    },
     //{ a: '96', b: "Person", c:"Ömer", d:"omr", e:"19-12-1996",f:"tr",g:"qwerty",h:"zxcvb",i:"vbnm",j:"12345",k:"qwert@gmail.com",l:"qwert",m:"12-11-2000",n:"11-12-2001" },
     //{ a: '97', b: "Person", c:"Faruk", d:"far", e:"19-12-1996",f:"tr",g:"qwerty",h:"zxcvb",i:"vbnm",j:"12345",k:"qwert@gmail.com",l:"qwert",m:"12-11-2000",n:"11-12-2001" },
     ];
-
-    // for (let index = 0; index < element.length; index++) {
-    //   let a = element[index];
-    //   binds.push([a])
-    // }
 
     const options = {
     autoCommit: true,
