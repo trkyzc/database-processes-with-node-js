@@ -1,5 +1,9 @@
 const { DB_TYPE_VARCHAR } = require('oracledb');
 const oracledb = require('oracledb');
+const fs = require("fs");
+const { parse } = require("csv-parse"); //const csv  //destructiring
+const csv = require('fast-csv')
+var records= [];
 
 // async function selectValues(){
 //     try{
@@ -55,10 +59,7 @@ const oracledb = require('oracledb');
 
 // selectValues();
 
-const fs = require("fs");
-const { parse } = require("csv-parse"); //const csv  //destructiring
-const csv = require('fast-csv')
-var records= [];
+
 
 fs.createReadStream('targets.simple.csv')
     .pipe(csv.parse({headers:true}))
