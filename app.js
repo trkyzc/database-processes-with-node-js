@@ -2,8 +2,8 @@ const { DB_TYPE_VARCHAR } = require('oracledb');
 const oracledb = require('oracledb');
 const fs = require("fs");
 const { parse } = require("csv-parse"); //const csv  //destructiring
-const csv = require('fast-csv')
-var records= [];
+//const csv = require('fast-csv')
+
 
 // async function selectValues(){
 //     try{
@@ -61,25 +61,52 @@ var records= [];
 
 
 
-fs.createReadStream('targets.simple.csv')
-    .pipe(csv.parse({headers:true}))
-    .on('error', error => console.error(error))
-    .on('data', function(row){
-      records.push(row);
+
+// fs.createReadStream('./targets.simple.csv')
+//     .pipe(csv.parse({headers:true}))
+//     .on('data', function(row){
+//       records.push(row);
       
-    })
-    .on("end", async function () {
-      let connection = await oracledb.getConnection({   
-        user          : "EGITIM",
-        password      : "EGITIM_1478.",
-        connectString : "5.189.178.35:1521/datateamdb"
-    });
+//     })
+//     .on("end", async function () {
+//       let connection = await oracledb.getConnection({   
+//         user          : "EGITIM",
+//         password      : "EGITIM_1478.",
+//         connectString : "5.189.178.35:1521/datateamdb"
+//     });
   
-      await records.forEach(element => {  //await eklendi.
-      multipleEntry(connection,element);
-      });
-      console.log("The operation has been completed successfully");
-    })
+//       await records.forEach(element => {  //await eklendi.
+//       multipleEntry(connection,element);
+//       });
+//       console.log("The operation has been completed successfully");
+//     })
+//     .on("error", function (error) {
+//           console.log(error.message);
+//     });
+
+
+
+var records= [];
+fs.createReadStream("./targets.simple.csv")
+  .pipe(parse({ delimiter: ",", from_line: 2, headers: true})) 
+  .on("data", function (row) {
+    records.push(row);
+  })
+  .on("end", async function () {
+    let connection = await oracledb.getConnection({   
+      user          : "EGITIM",
+      password      : "EGITIM_1478.",
+      connectString : "5.189.178.35:1521/datateamdb"
+  });
+
+    await records.forEach(element => {  //await eklendi.
+    multipleEntry(connection,element);
+    });
+    console.log("The operation has been completed successfully");
+  })
+  .on("error", function (error) {
+    console.log(error.message);
+  });
   
 
 
@@ -135,7 +162,6 @@ async function multipleEntry(connection,element){
 
 }
 
-    
 //multipleEntry();
 
 
