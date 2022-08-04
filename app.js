@@ -2,7 +2,7 @@ const { DB_TYPE_VARCHAR } = require('oracledb');
 const oracledb = require('oracledb');
 const fs = require("fs");
 const { parse } = require("csv-parse"); //const csv  //destructiring
-//const csv = require('fast-csv')
+
 
 
 // async function selectValues(){
@@ -60,34 +60,9 @@ const { parse } = require("csv-parse"); //const csv  //destructiring
 // selectValues();
 
 
+let records= [];
+let headers= [];
 
-
-// fs.createReadStream('./targets.simple.csv')
-//     .pipe(csv.parse({headers:true}))
-//     .on('data', function(row){
-//       records.push(row);
-      
-//     })
-//     .on("end", async function () {
-//       let connection = await oracledb.getConnection({   
-//         user          : "EGITIM",
-//         password      : "EGITIM_1478.",
-//         connectString : "5.189.178.35:1521/datateamdb"
-//     });
-  
-//       await records.forEach(element => {  //await eklendi.
-//       multipleEntry(connection,element);
-//       });
-//       console.log("The operation has been completed successfully");
-//     })
-//     .on("error", function (error) {
-//           console.log(error.message);
-//     });
-
-
-
-var records= [];
-var headers= [];
 fs.createReadStream("./targets.simple.csv")
   .pipe(parse({ delimiter: ",", from_line: 1, headers: true})) 
   .on("data", function (row) {
@@ -106,18 +81,13 @@ fs.createReadStream("./targets.simple.csv")
       headers.push(element);
   });
 
-  headers.forEach(element => {
-    console.log(element);
+  records.shift(); //delete header from records
+    
+  await records.forEach(element => {  //await added.
+  multipleEntry(connection,element,headers);
   });
+  console.log("The operation has been completed successfully");
 
-  records.shift();
-    
-    
-
-    await records.forEach(element => {  //await eklendi.
-    multipleEntry(connection,element);
-    });
-    console.log("The operation has been completed successfully");
   })
   .on("error", function (error) {
     console.log(error.message);
@@ -127,51 +97,85 @@ fs.createReadStream("./targets.simple.csv")
   
 
 
-async function multipleEntry(connection,element){
+async function multipleEntry(connection,element,headers){
 
-    // let connection = await oracledb.getConnection({   
-    //     user          : "EGITIM",
-    //     password      : "EGITIM_1478.",
-    //     connectString : "5.189.178.35:1521/datateamdb"
-    // });
 
-    const sql = `INSERT INTO EGITIM.TARIK_MECR VALUES (:a, :b,
-       :c, :d, :e, :f, :g, :h, 
-       :i, :j, :k, :l, :m, :n)`;
-    const binds = [
-    { 
-      a: element[0], b: element[1], c: element[2], d: element[3], e: element[4],
-      f: element[5],g: element[6],h: element[7],i: element[8],j: element[9],
-      k: element[10],l: element[11],m: element[12],n: element[13]
-    },
-    //{ a: '96', b: "Person", c:"Ömer", d:"omr", e:"19-12-1996",f:"tr",g:"qwerty",h:"zxcvb",i:"vbnm",j:"12345",k:"qwert@gmail.com",l:"qwert",m:"12-11-2000",n:"11-12-2001" },
-    //{ a: '97', b: "Person", c:"Faruk", d:"far", e:"19-12-1996",f:"tr",g:"qwerty",h:"zxcvb",i:"vbnm",j:"12345",k:"qwert@gmail.com",l:"qwert",m:"12-11-2000",n:"11-12-2001" },
-    ];
+//   let sql = `INSERT INTO EGITIM.TARIK_MECR VALUES (:a, :b,
+//     :c, :d, :e, :f, :g, :h, 
+//     :i, :j, :k, :l, :m, :n,`;
+//   sql = sql.substring(0, sql.length - 1);
+//   console.log(sql);
+//   sql+=")";
+//  const binds = [
+//   [element[0],element[1],element[2],element[3],element[4],element[5],element[6],element[7],
+//   element[8], element[9],element[10],element[11],element[12],element[13]]
+ 
+//  //{ a: '96', b: "Person", c:"Ömer", d:"omr", e:"19-12-1996",f:"tr",g:"qwerty",h:"zxcvb",i:"vbnm",j:"12345",k:"qwert@gmail.com",l:"qwert",m:"12-11-2000",n:"11-12-2001" },
+//  //{ a: '97', b: "Person", c:"Faruk", d:"far", e:"19-12-1996",f:"tr",g:"qwerty",h:"zxcvb",i:"vbnm",j:"12345",k:"qwert@gmail.com",l:"qwert",m:"12-11-2000",n:"11-12-2001" },
+//  ];
+
+//  const options = {
+//  autoCommit: true,
+//  bindDefs: [
+//    { type: oracledb.STRING, maxSize: 700 },
+//    { type: oracledb.STRING, maxSize: 700 },
+//    { type: oracledb.STRING, maxSize: 700 },
+//    { type: oracledb.STRING, maxSize: 700 },
+//    { type: oracledb.STRING, maxSize: 700 },
+//    { type: oracledb.STRING, maxSize: 700 },
+//    { type: oracledb.STRING, maxSize: 700 },
+//    { type: oracledb.STRING, maxSize: 700 },
+//    { type: oracledb.STRING, maxSize: 700 },   
+//    { type: oracledb.STRING, maxSize: 700 },
+//    { type: oracledb.STRING, maxSize: 700 },
+//    { type: oracledb.STRING, maxSize: 700 },
+//    { type: oracledb.STRING, maxSize: 700 },
+//    { type: oracledb.STRING, maxSize: 700 },
+//  ]
+//  };
+    
+
+    let binds= [];
+    let listInsideBinds=[]; //binds içinde bir liste daha olması gerek.(binds by position)
+    binds.push(listInsideBinds);
+    let sql = `INSERT INTO EGITIM.TARIK_MECR VALUES ( ` ;
+    
+    for (let index = 0; index < headers.length; index++) {
+      sql+=":" + headers[index] + ","
+      
+      listInsideBinds.push(element[index])
+    }
+    sql = sql.substring(0, sql.length - 1);
+    sql += ")" ;
+
+
 
     const options = {
-    autoCommit: true,
-    bindDefs: {
-      a: { type: oracledb.STRING, maxSize: 700 },
-      b: { type: oracledb.STRING, maxSize: 700 },
-      c: { type: oracledb.STRING, maxSize: 700 },
-      d: { type: oracledb.STRING, maxSize: 700 },
-      e: { type: oracledb.STRING, maxSize: 700 },
-      f: { type: oracledb.STRING, maxSize: 700 },
-      g: { type: oracledb.STRING, maxSize: 700 },
-      h: { type: oracledb.STRING, maxSize: 700 },
-      i: { type: oracledb.STRING, maxSize: 700 },   
-      j: { type: oracledb.STRING, maxSize: 700 },
-      k: { type: oracledb.STRING, maxSize: 700 },
-      l: { type: oracledb.STRING, maxSize: 700 },
-      m: { type: oracledb.STRING, maxSize: 700 },
-      n: { type: oracledb.STRING, maxSize: 700 },
-    }
+      autoCommit: true  
+
+    // bindDefs: [ //optional but more faster.
+    //   { type: oracledb.STRING, maxSize: 200 },
+    //   { type: oracledb.STRING, maxSize: 200 },
+    //   { type: oracledb.STRING, maxSize: 200 },
+    //   { type: oracledb.STRING, maxSize: 200 },
+    //   { type: oracledb.STRING, maxSize: 200 },
+    //   { type: oracledb.STRING, maxSize: 200 },
+    //   { type: oracledb.STRING, maxSize: 200 },
+    //   { type: oracledb.STRING, maxSize: 200 },
+    //   { type: oracledb.STRING, maxSize: 200 },   
+    //   { type: oracledb.STRING, maxSize: 200 },
+    //   { type: oracledb.STRING, maxSize: 200 },
+    //   { type: oracledb.STRING, maxSize: 200 },
+    //   { type: oracledb.STRING, maxSize: 200 },
+    //   { type: oracledb.STRING, maxSize: 200 },
+    // ]
     };
 
-    const result = await connection.executeMany(sql, binds, options);
 
-    //console.log(result.rowsAffected);
+    const result = await connection.executeMany(sql, binds, options);
     //console.log("The operation has been completed successfully");
+    //console.log(result.rowsAffected);
+    
 
 
 }
