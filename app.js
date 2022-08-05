@@ -2,7 +2,7 @@ const { DB_TYPE_VARCHAR } = require('oracledb');
 const oracledb = require('oracledb');
 const fs = require("fs");
 const { parse } = require("csv-parse"); //const csv  //destructiring
-
+//const connect= require("./credentials.js")
 
 
 // async function selectValues(){
@@ -60,85 +60,82 @@ const { parse } = require("csv-parse"); //const csv  //destructiring
 // selectValues();
 
 
-let records= [];
-let headers= [];
 
-fs.createReadStream("./targets.simple.csv")
+
+var records= [];
+var headers= [];
+var csvName= `wikidata` //targets.simple şeklinde yazınca hata veriyor.Tek kelime olacak.
+
+
+fs.createReadStream(`./${csvName}.csv`) 
   .pipe(parse({ delimiter: ",", from_line: 1, headers: true})) 
   .on("data", function (row) {
     records.push(row);
   })
   .on("end", async function () {
-    let connection = await oracledb.getConnection({   
+    
+     //var connection= connect().connection;
+
+    var connection= await oracledb.getConnection({   
       user          : "EGITIM",
       password      : "EGITIM_1478.",
       connectString : "5.189.178.35:1521/datateamdb"
-  });
+  })
 
   
-  records[0].forEach(element => {
-   
-      headers.push(element);
-  });
+      records[0].forEach(element => {
+      
+          headers.push(element);
+      });
 
-  records.shift(); //delete header from records
-    
-  await records.forEach(element => {  //await added.
-  multipleEntry(connection,element,headers);
-  });
-  console.log("The operation has been completed successfully");
 
-  })
-  .on("error", function (error) {
+      records.shift(); //delete header from records
+      //createTable(connection,headers);
+        
+      // await records.forEach(element => {  //await added.
+      // multipleEntry(connection,element,headers);
+      // });
+      console.log("The operation has been completed successfully");
+      })
+
+  .on("error", function (error) { 
     console.log(error.message);
   });
 
 
+headers.forEach(element => {  //HİÇBİR DEĞER DÖNMÜYOR.
+    console.log(element);
+  });
+
+records.forEach(element => {   //HİÇBİR DEĞER DÖNMÜYOR.
+  console.log(element);
+});
   
 
 
-async function multipleEntry(connection,element,headers){
+
+async function createTable(connection,headers){
+  //console.log(csvName);
+  var sqlCreateTable = `CREATE TABLE ${csvName}(` 
+
+  for (let i = 0; i < headers.length; i++) {
+    sqlCreateTable += `${headers[i]} VARCHAR(2000),` 
+  }
+  sqlCreateTable = sqlCreateTable.substring(0, sqlCreateTable.length - 1);
+  sqlCreateTable += `)`;
+  await connection.execute(sqlCreateTable);
+  console.log("Table has been created successfully");
+
+}
 
 
-//   let sql = `INSERT INTO EGITIM.TARIK_MECR VALUES (:a, :b,
-//     :c, :d, :e, :f, :g, :h, 
-//     :i, :j, :k, :l, :m, :n,`;
-//   sql = sql.substring(0, sql.length - 1);
-//   console.log(sql);
-//   sql+=")";
-//  const binds = [
-//   [element[0],element[1],element[2],element[3],element[4],element[5],element[6],element[7],
-//   element[8], element[9],element[10],element[11],element[12],element[13]]
- 
-//  //{ a: '96', b: "Person", c:"Ömer", d:"omr", e:"19-12-1996",f:"tr",g:"qwerty",h:"zxcvb",i:"vbnm",j:"12345",k:"qwert@gmail.com",l:"qwert",m:"12-11-2000",n:"11-12-2001" },
-//  //{ a: '97', b: "Person", c:"Faruk", d:"far", e:"19-12-1996",f:"tr",g:"qwerty",h:"zxcvb",i:"vbnm",j:"12345",k:"qwert@gmail.com",l:"qwert",m:"12-11-2000",n:"11-12-2001" },
-//  ];
 
-//  const options = {
-//  autoCommit: true,
-//  bindDefs: [
-//    { type: oracledb.STRING, maxSize: 700 },
-//    { type: oracledb.STRING, maxSize: 700 },
-//    { type: oracledb.STRING, maxSize: 700 },
-//    { type: oracledb.STRING, maxSize: 700 },
-//    { type: oracledb.STRING, maxSize: 700 },
-//    { type: oracledb.STRING, maxSize: 700 },
-//    { type: oracledb.STRING, maxSize: 700 },
-//    { type: oracledb.STRING, maxSize: 700 },
-//    { type: oracledb.STRING, maxSize: 700 },   
-//    { type: oracledb.STRING, maxSize: 700 },
-//    { type: oracledb.STRING, maxSize: 700 },
-//    { type: oracledb.STRING, maxSize: 700 },
-//    { type: oracledb.STRING, maxSize: 700 },
-//    { type: oracledb.STRING, maxSize: 700 },
-//  ]
-//  };
-    
+async function multipleEntry(connection,element,headers){ 
 
     let binds= [];
     let listInsideBinds=[]; //binds içinde bir liste daha olması gerek.(binds by position)
     binds.push(listInsideBinds);
-    let sql = `INSERT INTO EGITIM.TARIK_MECR VALUES ( ` ;
+    let sql = `INSERT INTO EGITIM.${csvName} VALUES ( ` ; 
     
     for (let index = 0; index < headers.length; index++) {
       sql+=":" + headers[index] + ","
@@ -173,17 +170,11 @@ async function multipleEntry(connection,element,headers){
 
 
     const result = await connection.executeMany(sql, binds, options);
-    //console.log("The operation has been completed successfully");
     //console.log(result.rowsAffected);
     
 
 
 }
-
-//multipleEntry();
-
-
-
 
 
 
