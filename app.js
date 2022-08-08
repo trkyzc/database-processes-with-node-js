@@ -72,7 +72,7 @@ var csvName;
 
 async function downloadCSV() {
     const file = 'https://data.opensanctions.org/datasets/latest/eu_cor_members/targets.simple.csv';
-    var name=(pathh.basename('https://data.opensanctions.org/datasets/latest/eu_cor_members/targets.simple.csv'))
+    var name=(pathh.basename(file));
     csvName=name.replace('.' ,'');
     csvName=csvName.replace('.csv','');
     console.log(csvName);
