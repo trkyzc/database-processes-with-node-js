@@ -2,6 +2,8 @@ const { DB_TYPE_VARCHAR } = require('oracledb');
 const oracledb = require('oracledb');
 const fs = require("fs");
 const { parse } = require("csv-parse"); //const csv  //destructiring
+const download = require('download');
+const pathh = require('path');
 //const connect= require("./credentials.js")
 
 
@@ -64,10 +66,39 @@ const { parse } = require("csv-parse"); //const csv  //destructiring
 
 var records= [];
 var headers= [];
-var csvName= `wikidata` //targets.simple şeklinde yazınca hata veriyor.Tek kelime olacak.
+//var csvName= `targetssimple` //targets.simple şeklinde yazınca hata veriyor.Tek kelime olacak.
+var csvName;
 
 
-fs.createReadStream(`./${csvName}.csv`) 
+async function downloadCSV() {
+    const file = 'https://data.opensanctions.org/datasets/latest/eu_cor_members/targets.simple.csv';
+    var name=(pathh.basename('https://data.opensanctions.org/datasets/latest/eu_cor_members/targets.simple.csv'))
+    csvName=name.replace('.' ,'');
+    csvName=csvName.replace('.csv','');
+    console.log(csvName);
+
+    const filePath = `${__dirname}/`;
+      
+    await download(file,filePath)
+    .then(() => {
+        console.log('Download Completed');
+    })   
+
+    fs.rename(name, `${csvName}.csv`, function (err) {
+      if (err) throw err;
+      console.log('File Renamed.');                                            
+    });
+
+}
+
+
+//downloadCSV();
+
+                              
+async function run() {
+  await downloadCSV();
+
+  fs.createReadStream(`./${csvName}.csv`) 
   .pipe(parse({ delimiter: ",", from_line: 1, headers: true})) 
   .on("data", function (row) {
     records.push(row);
@@ -90,11 +121,11 @@ fs.createReadStream(`./${csvName}.csv`)
 
 
       records.shift(); //delete header from records
-      //createTable(connection,headers);
+      createTable(connection,headers);
         
-      // await records.forEach(element => {  //await added.
-      // multipleEntry(connection,element,headers);
-      // });
+      await records.forEach(element => {  //await added.
+      multipleEntry(connection,element,headers);
+      });
       console.log("The operation has been completed successfully");
       })
 
@@ -102,21 +133,53 @@ fs.createReadStream(`./${csvName}.csv`)
     console.log(error.message);
   });
 
+}
 
-headers.forEach(element => {  //HİÇBİR DEĞER DÖNMÜYOR.
-    console.log(element);
-  });
+run();
 
-records.forEach(element => {   //HİÇBİR DEĞER DÖNMÜYOR.
-  console.log(element);
-});
+// fs.createReadStream(path) 
+//   .pipe(parse({ delimiter: ",", from_line: 1, headers: true})) 
+//   .on("data", function (row) {
+//     records.push(row);
+//   })
+//   .on("end", async function () {
+    
+//      //var connection= connect().connection;
+
+//     var connection= await oracledb.getConnection({   
+//       user          : "EGITIM",
+//       password      : "EGITIM_1478.",
+//       connectString : "5.189.178.35:1521/datateamdb"
+//   })
+
   
+//       records[0].forEach(element => {
+      
+//           headers.push(element);
+//       });
+
+
+//       records.shift(); //delete header from records
+//       createTable(connection,headers);
+        
+//       await records.forEach(element => {  //await added.
+//       multipleEntry(connection,element,headers);
+//       });
+//       console.log("The operation has been completed successfully");
+//       })
+
+//   .on("error", function (error) { 
+//     console.log(error.message);
+//   });
+
+
+
 
 
 
 async function createTable(connection,headers){
   //console.log(csvName);
-  var sqlCreateTable = `CREATE TABLE ${csvName}(` 
+  var sqlCreateTable = `CREATE TABLE ${csvName}(`
 
   for (let i = 0; i < headers.length; i++) {
     sqlCreateTable += `${headers[i]} VARCHAR(2000),` 
