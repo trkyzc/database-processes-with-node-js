@@ -9,8 +9,10 @@
   "keywords": [],
   "dependencies": {
     "csv": "^6.2.0",
+    "download": "^8.0.0",
     "fast-csv": "^4.3.6",
-    "oracledb": "^5.4.0"
+    "oracledb": "^5.4.0",
+    "path": "^0.12.7"
   },
   "author": "",
   "license": "ISC"
